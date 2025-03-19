@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import Post, { IPost } from '../models/Post'
+import { serializeMdx } from '../utils/serializeMdx'
 
 // @desc    Get all posts with filters
 // @route   GET /api/posts
@@ -110,7 +111,10 @@ export const getPostById = async (
 			return res.status(404).json({ message: 'Post not found' })
 		}
 
-		res.json(post)
+		const postObj = post.toObject()
+		const serializedContent = await serializeMdx(postObj.content)
+		postObj.content = serializedContent as any
+		res.json(postObj)
 	} catch (error) {
 		res.status(500).json({
 			message: error instanceof Error ? error.message : 'Server error',
@@ -131,8 +135,10 @@ export const getPostBySlug = async (
 		if (!post) {
 			return res.status(404).json({ message: 'Post not found' })
 		}
-
-		res.json(post)
+		const postObj = post.toObject()
+		const serializedContent = await serializeMdx(postObj.content)
+		postObj.content = serializedContent as any
+		res.json(postObj)
 	} catch (error) {
 		res.status(500).json({
 			message: error instanceof Error ? error.message : 'Server error',
