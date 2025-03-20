@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, type Document } from 'mongoose'
 
 // General Settings Interface
 export interface IGeneralSettings extends Document {
@@ -9,6 +9,7 @@ export interface IGeneralSettings extends Document {
 	location: string
 	resumeUrl: string
 	footerText: string
+	skills: string[] // Added skills array
 	createdAt: Date
 	updatedAt: Date
 }
@@ -37,7 +38,7 @@ export interface IPreferenceSettings extends Document {
 }
 
 // General Settings Schema
-const generalSettingsSchema: Schema = new Schema(
+const GeneralSettingsSchema: Schema = new Schema(
 	{
 		siteTitle: {
 			type: String,
@@ -74,12 +75,24 @@ const generalSettingsSchema: Schema = new Schema(
 			required: true,
 			default: `© ${new Date().getFullYear()} Portfolio. All rights reserved.`,
 		},
+		skills: {
+			type: [String],
+			default: [
+				'Django',
+				'Python',
+				'Next.js',
+				'TypeScript',
+				'React',
+				'Tailwind CSS',
+				'Node.js',
+			],
+		},
 	},
 	{ timestamps: true },
 )
 
 // Social Settings Schema
-const socialSettingsSchema: Schema = new Schema(
+const SocialSettingsSchema: Schema = new Schema(
 	{
 		github: {
 			type: String,
@@ -110,7 +123,7 @@ const socialSettingsSchema: Schema = new Schema(
 )
 
 // Preference Settings Schema
-const preferenceSettingsSchema: Schema = new Schema(
+const PreferenceSettingsSchema: Schema = new Schema(
 	{
 		enableBlog: {
 			type: Boolean,
@@ -136,7 +149,7 @@ const preferenceSettingsSchema: Schema = new Schema(
 	{ timestamps: true },
 )
 
-// Export types for data fetch
+// Export types for data-fetch.ts
 export type GeneralSettings = Omit<
 	IGeneralSettings,
 	keyof Document | 'createdAt' | 'updatedAt'
@@ -172,25 +185,27 @@ export type Settings = {
 	preferences: PreferenceSettings
 }
 
-// Create models
-export const GeneralSettings = mongoose.model<IGeneralSettings>(
-	'GeneralSettings',
-	generalSettingsSchema,
-)
-export const SocialSettings = mongoose.model<ISocialSettings>(
-	'SocialSettings',
-	socialSettingsSchema,
-)
-export const PreferenceSettings = mongoose.model<IPreferenceSettings>(
-	'PreferenceSettings',
-	preferenceSettingsSchema,
-)
+// Export models with NextJS hot-reload handling
+export const GeneralSettings =
+	mongoose.models.GeneralSettings ||
+	mongoose.model<IGeneralSettings>('GeneralSettings', GeneralSettingsSchema)
+
+export const SocialSettings =
+	mongoose.models.SocialSettings ||
+	mongoose.model<ISocialSettings>('SocialSettings', SocialSettingsSchema)
+
+export const PreferenceSettings =
+	mongoose.models.PreferenceSettings ||
+	mongoose.model<IPreferenceSettings>(
+		'PreferenceSettings',
+		PreferenceSettingsSchema,
+	)
 
 /**
  * Helper function to get settings by type
  */
 export async function getSettingsByType(type: SettingType): Promise<any> {
-	let Model: any
+	let Model
 
 	switch (type) {
 		case 'general':
@@ -227,7 +242,7 @@ export async function updateSettingsByType(
 	type: SettingType,
 	data: any,
 ): Promise<any> {
-	let Model: any
+	let Model
 
 	switch (type) {
 		case 'general':
